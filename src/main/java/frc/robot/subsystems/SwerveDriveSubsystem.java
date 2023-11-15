@@ -31,13 +31,8 @@ import frc.lib.swerve.SwerveDriveSignal;
 import frc.lib.swerve.SwerveModule;
 import frc.robot.Constants;
 import frc.robot.Constants.SwerveConstants;
-import frc.robot.commands.FeedForwardCharacterization;
-import frc.robot.commands.FeedForwardCharacterization.FeedForwardCharacterizationData;
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
-import java.util.stream.DoubleStream;
 
 public class SwerveDriveSubsystem extends SubsystemBase {
     private final SwerveDrivePoseEstimator swervePoseEstimator;
@@ -47,11 +42,6 @@ public class SwerveDriveSubsystem extends SubsystemBase {
     private ChassisSpeeds velocity = new ChassisSpeeds();
     private ChassisSpeeds previousVelocity = new ChassisSpeeds();
     private SwerveDriveSignal driveSignal = new SwerveDriveSignal();
-
-    private LoggedReceiver pidValueReciever;
-
-    /* new logged reciever value */
-    private LoggedReceiver angleRateThresholdReceiver;
 
     private double levelingMaxSpeed;
 
@@ -101,11 +91,6 @@ public class SwerveDriveSubsystem extends SubsystemBase {
 
         // Allow us to toggle on second order kinematics
         isSecondOrder = Logger.tunable("/SwerveDriveSubsystem/isSecondOrder", true);
-        pidValueReciever = Logger.tunable(
-                "/SwerveDriveSubsystem/levelPIDValues",
-                new double[] {0.8 / 15, 0, .01, 8, 0.8}); // P I D stopAngle leveingMaxSpeed
-        // [0.055,0,0.01,10,0.55]\][]
-        // new double[] {0.75 / 15, 0, .02, 8, 0.85}
     }
 
     public Command driveCommand(
@@ -311,49 +296,6 @@ public class SwerveDriveSubsystem extends SubsystemBase {
                             lock();
                         })
                 .until(whenToStop);
-    }
-
-    public Command characterizeCommand(boolean forwards, boolean isDriveMotors) {
-        Consumer<Double> voltageConsumer = isDriveMotors
-                ? (Double voltage) -> {
-                    for (SwerveModule module : modules) {
-                        module.setDriveCharacterizationVoltage(voltage);
-                    }
-                }
-                : (Double voltage) -> {
-                    for (SwerveModule module : modules) {
-                        module.setAngleCharacterizationVoltage(voltage);
-                    }
-                };
-
-        Supplier<Double> velocitySupplier = isDriveMotors
-                ? () -> {
-                    return DoubleStream.of(
-                                    modules[0].getState().speedMetersPerSecond,
-                                    modules[1].getState().speedMetersPerSecond,
-                                    modules[2].getState().speedMetersPerSecond,
-                                    modules[3].getState().speedMetersPerSecond)
-                            .average()
-                            .getAsDouble();
-                }
-                : () -> {
-                    return DoubleStream.of(
-                                    modules[0].getAngularVelocity(),
-                                    modules[1].getAngularVelocity(),
-                                    modules[2].getAngularVelocity(),
-                                    modules[3].getAngularVelocity())
-                            .average()
-                            .getAsDouble();
-                };
-
-        return new FeedForwardCharacterization(
-                        this,
-                        forwards,
-                        new FeedForwardCharacterizationData("Swerve Drive"),
-                        voltageConsumer,
-                        velocitySupplier)
-                .beforeStarting(() -> isCharacterizing = true)
-                .finallyDo((boolean interrupted) -> isCharacterizing = false);
     }
 
     public void setCustomMaxSpeedSupplier(DoubleSupplier maxSpeedSupplier) {

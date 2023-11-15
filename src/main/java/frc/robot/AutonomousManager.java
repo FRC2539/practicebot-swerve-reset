@@ -11,7 +11,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.logging.LoggedReceiver;
 import frc.lib.logging.Logger;
-import frc.robot.subsystems.ShooterSubsystem;
 import frc.robot.subsystems.SwerveDriveSubsystem;
 import java.util.HashMap;
 import java.util.List;
@@ -34,11 +33,9 @@ public class AutonomousManager {
     private List<PathPlannerTrajectory> chosenAuto = defaultAuto.getPath();
 
     SwerveDriveSubsystem swerveDriveSubsystem;
-    ShooterSubsystem shooterSubsystem;
 
     public AutonomousManager(RobotContainer container) {
         swerveDriveSubsystem = container.getSwerveDriveSubsystem();
-        shooterSubsystem = container.getShooterSubsystem();
 
         initializeNetworkTables();
 
@@ -46,12 +43,6 @@ public class AutonomousManager {
         HashMap<String, Command> eventMap = new HashMap<>();
         eventMap.put("levelChargeStation", swerveDriveSubsystem.levelChargeStationCommandDestiny());
         eventMap.put("lock", run(swerveDriveSubsystem::lock, swerveDriveSubsystem));
-        eventMap.put(
-                "shootHigh",
-                shooterSubsystem.shootHighCommand()
-                                .withTimeout(2)
-                                .andThen(shooterSubsystem.setDisabledCommand().withTimeout(0.1)));
-        eventMap.put("intake", shooterSubsystem.intakeModeCommand().withTimeout(2));
 
         autoBuilder = new SwerveAutoBuilder(
                 swerveDriveSubsystem::getPose,
