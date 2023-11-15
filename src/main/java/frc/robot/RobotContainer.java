@@ -11,7 +11,10 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.lib.controller.LogitechController;
 import frc.lib.controller.ThrustmasterJoystick;
 import frc.robot.Constants.ControllerConstants;
-import frc.robot.subsystems.*;
+import frc.robot.subsystems.lights.LightsIOBlinkin;
+import frc.robot.subsystems.lights.LightsSubsystem;
+import frc.robot.subsystems.swervedrive.SwerveDriveSubsystem;
+import frc.robot.subsystems.vision.VisionSubsystem;
 
 public class RobotContainer {
     private final ThrustmasterJoystick leftDriveController =
@@ -25,7 +28,7 @@ public class RobotContainer {
     public static SlewRateLimiter strafeRateLimiter = new SlewRateLimiter(35, -35, 0);
 
     private final SwerveDriveSubsystem swerveDriveSubsystem = new SwerveDriveSubsystem();
-    private final LightsSubsystem lightsSubsystem = new LightsSubsystem();
+    private final LightsSubsystem lightsSubsystem = new LightsSubsystem(new LightsIOBlinkin(0));
     private final VisionSubsystem visionSubsystem = new VisionSubsystem();
 
     public AutonomousManager autonomousManager;

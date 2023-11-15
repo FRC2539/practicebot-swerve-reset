@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.swervedrive;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -21,8 +21,6 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.lib.gyro.GenericGyro;
-import frc.lib.gyro.NavXGyro;
 import frc.lib.interpolation.MovingAverageVelocity;
 import frc.lib.logging.LoggedReceiver;
 import frc.lib.logging.Logger;
@@ -31,6 +29,7 @@ import frc.lib.swerve.SwerveDriveSignal;
 import frc.lib.swerve.SwerveModule;
 import frc.robot.Constants;
 import frc.robot.Constants.SwerveConstants;
+import frc.robot.subsystems.swervedrive.GyroIO.GyroIOInputs;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
@@ -51,7 +50,8 @@ public class SwerveDriveSubsystem extends SubsystemBase {
 
     private SwerveModule[] modules;
 
-    private GenericGyro gyro;
+    private GyroIO gyroIO;
+    private GyroIOInputs gyroInputs = new GyroIOInputs();
 
     boolean isCharacterizing = false;
 
@@ -71,7 +71,7 @@ public class SwerveDriveSubsystem extends SubsystemBase {
     private DoubleSupplier maxSpeedSupplier = () -> Constants.SwerveConstants.maxSpeed;
 
     public SwerveDriveSubsystem() {
-        gyro = new NavXGyro();
+        gyroIO = new GyroIONavX();
 
         modules = new SwerveModule[] {
             new SwerveModule(0, Constants.SwerveConstants.Mod0.constants),
@@ -353,7 +353,7 @@ public class SwerveDriveSubsystem extends SubsystemBase {
     }
 
     public Rotation2d getGyroRotation() {
-        return gyro.getRotation2d();
+        return gyroInputs.rotation2d;
     }
 
     public Rotation2d getRotation() {
@@ -361,7 +361,7 @@ public class SwerveDriveSubsystem extends SubsystemBase {
     }
 
     public Rotation3d getGyroRotation3d() {
-        return gyro.getRotation3d();
+        return gyroInputs.rotation3d;
     }
 
     public Translation3d getNormalVector3d() {
@@ -486,6 +486,8 @@ public class SwerveDriveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        gyroIO.updateInputs(gyroInputs);
+
         var startTimeMS = Timer.getFPGATimestamp() * 1000;
 
         var tilt = getTiltAmount();
