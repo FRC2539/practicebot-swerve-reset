@@ -26,7 +26,6 @@ import frc.lib.logging.LoggedReceiver;
 import frc.lib.logging.Logger;
 import frc.lib.math.MathUtils;
 import frc.lib.swerve.SwerveDriveSignal;
-import frc.lib.swerve.SwerveModule;
 import frc.robot.Constants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.subsystems.swervedrive.GyroIO.GyroIOInputs;

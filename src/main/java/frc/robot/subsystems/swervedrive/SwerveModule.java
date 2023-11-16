@@ -1,4 +1,4 @@
-package frc.lib.swerve;
+package frc.robot.subsystems.swervedrive;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
@@ -17,10 +17,15 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.lib.math.Conversions;
+import frc.lib.swerve.CTREModuleState;
+import frc.lib.swerve.SecondOrderSwerveModuleState;
+import frc.lib.swerve.SwerveModuleConstants;
 import frc.robot.Constants;
 import frc.robot.Robot;
 
 public class SwerveModule {
+    
+
     public int moduleNumber;
     private double zeroedWheelCANCoderAngle;
     private TalonFX angleMotor;
