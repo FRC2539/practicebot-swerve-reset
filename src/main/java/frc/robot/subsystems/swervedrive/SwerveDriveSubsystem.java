@@ -69,14 +69,14 @@ public class SwerveDriveSubsystem extends SubsystemBase {
     private double tiltRate = 0;
     private DoubleSupplier maxSpeedSupplier = () -> Constants.SwerveConstants.maxSpeed;
 
-    public SwerveDriveSubsystem() {
+    public SwerveDriveSubsystem(SwerveModuleIO[] swerveModuleIOs) {
         gyroIO = new GyroIONavX();
 
         modules = new SwerveModule[] {
-            new SwerveModule(0, Constants.SwerveConstants.Mod0.constants),
-            new SwerveModule(1, Constants.SwerveConstants.Mod1.constants),
-            new SwerveModule(2, Constants.SwerveConstants.Mod2.constants),
-            new SwerveModule(3, Constants.SwerveConstants.Mod3.constants)
+            new SwerveModule(swerveModuleIOs[0]),
+            new SwerveModule(swerveModuleIOs[1]),
+            new SwerveModule(swerveModuleIOs[2]),
+            new SwerveModule(swerveModuleIOs[3])
         };
 
         // Initialize the swerve drive pose estimator with access to the module positions.
@@ -215,40 +215,6 @@ public class SwerveDriveSubsystem extends SubsystemBase {
                     isLevelingAuto = false;
                     isRainbow = false;
                 });
-        // return run(() -> {
-        //             double tilt = getTiltAmountInDegrees();
-
-        //             // Negative pitch -> drive forward, Positive pitch -> drive backward
-
-        //             Translation2d direction = new Translation2d(
-        //                     1,
-        //                     new Rotation2d(
-        //                             getNormalVector3d().getX(),
-        //                             getNormalVector3d().getY()));
-
-        //             double speed = tiltController.calculate(tilt, 0);
-        //             if (speed >= levelingMaxSpeed) speed = levelingMaxSpeed;
-
-        //             Translation2d finalDirection = direction.times(tiltController.calculate(tilt, 0));
-
-        //             ChassisSpeeds velocity = new ChassisSpeeds(finalDirection.getX(), finalDirection.getY(), 0);
-
-        //             if (tiltController.atSetpoint()) {
-        //                 lock();
-        //             } else setVelocity(velocity, false);
-        //         })
-        //         .beforeStarting(() -> {
-        //             isLevelingAuto = true;
-        //             var values = pidValueReciever.getDoubleArray();
-        //             if (values.length < 5) return;
-        //             tiltController.setPID(values[0], values[1], values[2]);
-        //             tiltController.setTolerance(values[3]);
-        //             levelingMaxSpeed = values[4];
-        //         })
-        //         .finallyDo((interrupted) -> {
-        //             tiltController.reset();
-        //             isLevelingAuto = false;
-        //         });
     }
 
     public boolean isLevelDestiny() {

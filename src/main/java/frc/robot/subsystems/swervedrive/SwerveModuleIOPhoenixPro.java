@@ -1,3 +1,5 @@
+package frc.robot.subsystems.swervedrive;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
@@ -13,13 +15,10 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.lib.math.Conversions;
 import frc.lib.swerve.SwerveModuleConstants;
 import frc.robot.Constants;
 import frc.robot.Robot;
-import frc.robot.subsystems.swervedrive.SwerveModuleIO.SwerveModuleIOInputs;
 
 public class SwerveModuleIOPhoenixPro implements SwerveModuleIO {
     public int moduleNumber;
@@ -27,8 +26,6 @@ public class SwerveModuleIOPhoenixPro implements SwerveModuleIO {
     private TalonFX angleMotor;
     private TalonFX driveMotor;
     private CANcoder angleEncoder;
-    private double lastAngle;
-    private SwerveModuleState desiredSetpointState;
 
     private VoltageOut voltageRequestDrive = new VoltageOut(0).withEnableFOC(true);
 
@@ -97,40 +94,43 @@ public class SwerveModuleIOPhoenixPro implements SwerveModuleIO {
         angleCurrentSS = angleMotor.getSupplyCurrent();
 
         encoderAbsoluteAngleSS = angleEncoder.getAbsolutePosition();
-
-        lastAngle = getState().angle.getDegrees();
     }
 
-        public void setDesiredVelocityOpenLoop(double velocity) {
+    public void setDesiredVelocityOpenLoop(double velocity) {
         double percentOutput = velocity / Constants.SwerveConstants.maxSpeed;
-            driveMotor.setControl(
-                    voltageRequestDrive.withOutput(percentOutput * Constants.GlobalConstants.targetVoltage));
+        driveMotor.setControl(voltageRequestDrive.withOutput(percentOutput * Constants.GlobalConstants.targetVoltage));
     }
 
     public void setDesiredVelocityClosedLoop(double velocity) {
         double velocityMotor = Conversions.MPSToMotorRPS(
-                    velocity,
-                    Constants.SwerveConstants.wheelCircumference,
-                    Constants.SwerveConstants.driveGearRatio);
+                velocity, Constants.SwerveConstants.wheelCircumference, Constants.SwerveConstants.driveGearRatio);
         driveMotor.setControl(velocityVoltageRequestDrive
-                    .withVelocity(velocityMotor)
-                    .withFeedForward(driveFeedforward.calculate(velocity)));
+                .withVelocity(velocityMotor)
+                .withFeedForward(driveFeedforward.calculate(velocity)));
     }
 
     public void setDesiredAngularPosition(double angularPosition) {
         angleMotor.setControl(
-                    positionVoltageRequestAngle.withPosition(angularPosition / 360).withFeedForward(0));
+                positionVoltageRequestAngle.withPosition(angularPosition / 360).withFeedForward(0));
     }
 
     public void setDesiredAngularPositionAndVelocity(double angularPosition, double angularVelocity) {
         angleMotor.setControl(positionVoltageRequestAngle
-                    .withPosition(angularPosition / 360)
-                    .withFeedForward(angularVelocity
-                            * Constants.SwerveConstants.calculatedAngleKV));
+                .withPosition(angularPosition / 360)
+                .withFeedForward(angularVelocity * Constants.SwerveConstants.calculatedAngleKV));
+    }
+
+    public void disableDriveMotor() {
+        driveMotor.stopMotor();
+    }
+
+    public void disableAngleMotor() {
+        angleMotor.stopMotor();
     }
 
     public void updateInputs(SwerveModuleIOInputs inputs) {
-        inputs.angularVelocity = getAngularVelocity();
+        inputs.angularVelocity = Conversions.motorRPSToRadPS(
+                angleVelocitySS.refresh().getValue(), Constants.SwerveConstants.angleGearRatio);
         inputs.velocity = Conversions.motorRPSToMPS(
                 driveRotorVelocitySS.refresh().getValue(),
                 Constants.SwerveConstants.wheelCircumference,
@@ -141,6 +141,10 @@ public class SwerveModuleIOPhoenixPro implements SwerveModuleIO {
                 BaseStatusSignal.getLatencyCompensatedValue(drivePositionSS.refresh(), driveVelocitySS.refresh()),
                 Constants.SwerveConstants.wheelCircumference,
                 Constants.SwerveConstants.driveGearRatio);
+        inputs.encoderAngle =
+                Rotation2d.fromRotations(encoderAbsoluteAngleSS.refresh().getValue());
+        inputs.encoderAngleNoOffset = Rotation2d.fromRotations(
+                (encoderAbsoluteAngleSS.refresh().getValue() + zeroedWheelCANCoderAngle) % 1.0);
 
         inputs.driveTemperature = driveTemperatureSS.refresh().getValue();
         inputs.angleTemperature = angleTemperatureSS.refresh().getValue();
@@ -148,91 +152,6 @@ public class SwerveModuleIOPhoenixPro implements SwerveModuleIO {
         inputs.angleVoltage = angleVoltageSS.refresh().getValue();
         inputs.driveCurrent = driveCurrentSS.refresh().getValue();
         inputs.angleCurrent = angleCurrentSS.refresh().getValue();
-    }
-
-    public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop) {
-        setDesiredState(desiredState, isOpenLoop, false);
-    }
-
-    public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop, boolean isSecondOrder) {
-        desiredSetpointState = desiredState;
-
-        // Custom optimize command, since default WPILib optimize assumes continuous controller, which CTRE is not
-        desiredState = CTREModuleState.optimize(desiredState, getState().angle);
-
-        if (isOpenLoop) {
-            double percentOutput = desiredState.speedMetersPerSecond / Constants.SwerveConstants.maxSpeed;
-            driveMotor.setControl(
-                    voltageRequestDrive.withOutput(percentOutput * Constants.GlobalConstants.targetVoltage));
-        } else {
-            double velocity = Conversions.MPSToMotorRPS(
-                    desiredState.speedMetersPerSecond,
-                    Constants.SwerveConstants.wheelCircumference,
-                    Constants.SwerveConstants.driveGearRatio);
-            driveMotor.setControl(velocityVoltageRequestDrive
-                    .withVelocity(velocity)
-                    .withFeedForward(driveFeedforward.calculate(desiredState.speedMetersPerSecond)));
-        }
-
-        // Determine the angle to set the module to
-        double angle = (Math.abs(desiredState.speedMetersPerSecond) <= (Constants.SwerveConstants.maxSpeed * 0.01))
-                ? lastAngle
-                : desiredState.angle
-                        .getDegrees(); // Prevent rotating module if speed is less then 1%. Prevents Jittering.
-
-        lastAngle = angle;
-
-        // Account for the velocity of the angle motor if in second order mode
-        if (isSecondOrder && desiredState instanceof SecondOrderSwerveModuleState) {
-            angleMotor.setControl(positionVoltageRequestAngle
-                    .withPosition(angle / 360)
-                    .withFeedForward(((SecondOrderSwerveModuleState) desiredState).angularVelocityRadiansPerSecond
-                            * Constants.SwerveConstants.calculatedAngleKV));
-        } else {
-            angleMotor.setControl(
-                    positionVoltageRequestAngle.withPosition(angle / 360).withFeedForward(0));
-        }
-    }
-
-    public void setDesiredAngleOnly(Rotation2d desiredAngle, boolean optimized) {
-        // Set the module to face forwards
-        if (optimized) {
-            desiredAngle = CTREModuleState.optimize(new SwerveModuleState(1, desiredAngle), getState().angle).angle;
-        }
-
-        angleMotor.setControl(positionVoltageRequestAngle
-                .withPosition(desiredAngle.getRotations())
-                .withFeedForward(0));
-
-        lastAngle = 0;
-
-        // Stop the motor to bypass the speed check
-        driveMotor.stopMotor();
-    }
-
-    public void setDriveCharacterizationVoltage(double voltage) {
-        // Set the module to face forwards
-        angleMotor.setControl(positionVoltageRequestAngle.withPosition(0).withFeedForward(0));
-
-        lastAngle = 0;
-
-        // Set the drive motor to the specified voltage
-        driveMotor.setControl(voltageRequestDrive.withOutput(voltage));
-    }
-
-    public void setAngleCharacterizationVoltage(double voltage) {
-        // Set the module to face forwards
-        angleMotor.setControl(voltageRequestDrive.withOutput(voltage));
-
-        lastAngle = 0;
-
-        // Set the drive motor to just enough to overcome static friction
-        driveMotor.setControl(voltageRequestDrive.withOutput(0));
-    }
-
-    public void disableMotors() {
-        driveMotor.stopMotor();
-        angleMotor.stopMotor();
     }
 
     private void configAngleEncoder() {
@@ -275,74 +194,5 @@ public class SwerveModuleIOPhoenixPro implements SwerveModuleIO {
                 : InvertedValue.CounterClockwise_Positive;
 
         configurator.apply(outputConfigs);
-    }
-
-    public Rotation2d getCanCoderWithOffset() {
-        return Rotation2d.fromRotations(encoderAbsoluteAngleSS.refresh().getValue());
-    }
-
-    public Rotation2d getCanCoderNoOffset() {
-        return Rotation2d.fromRotations((encoderAbsoluteAngleSS.refresh().getValue() + zeroedWheelCANCoderAngle) % 1.0);
-    }
-
-    public TalonFX getDriveMotor() {
-        return driveMotor;
-    }
-
-    public TalonFX getAngleMotor() {
-        return angleMotor;
-    }
-
-    public SwerveModuleState getState() {
-        double velocity = Conversions.motorRPSToMPS(
-                driveRotorVelocitySS.refresh().getValue(),
-                Constants.SwerveConstants.wheelCircumference,
-                Constants.SwerveConstants.driveGearRatio);
-        Rotation2d angle = Rotation2d.fromRotations(
-                BaseStatusSignal.getLatencyCompensatedValue(anglePositionSS.refresh(), angleVelocitySS.refresh()));
-        return new SwerveModuleState(velocity, angle);
-    }
-
-    public SwerveModuleState getDesiredState() {
-        return desiredSetpointState;
-    }
-
-    public double getAngularVelocity() {
-        return Conversions.motorRPSToRadPS(
-                angleVelocitySS.refresh().getValue(), Constants.SwerveConstants.angleGearRatio);
-    }
-
-    public SwerveModulePosition getPosition() {
-        double encoder = Conversions.motorToMeters(
-                BaseStatusSignal.getLatencyCompensatedValue(drivePositionSS.refresh(), driveVelocitySS.refresh()),
-                Constants.SwerveConstants.wheelCircumference,
-                Constants.SwerveConstants.driveGearRatio);
-        Rotation2d angle = Rotation2d.fromRotations(
-                BaseStatusSignal.getLatencyCompensatedValue(anglePositionSS.refresh(), angleVelocitySS.refresh()));
-        return new SwerveModulePosition(encoder, angle);
-    }
-
-    public double getDriveTemperature() {
-        return driveTemperatureSS.refresh().getValue();
-    }
-
-    public double getAngleTemperature() {
-        return angleTemperatureSS.refresh().getValue();
-    }
-
-    public double getDriveVoltage() {
-        return driveVoltageSS.refresh().getValue();
-    }
-
-    public double getAngleVoltage() {
-        return angleVoltageSS.refresh().getValue();
-    }
-
-    public double getDriveCurrent() {
-        return driveCurrentSS.refresh().getValue();
-    }
-
-    public double getAngleCurrent() {
-        return angleCurrentSS.refresh().getValue();
     }
 }

@@ -10,6 +10,8 @@ public interface SwerveModuleIO {
         double velocity = 0;
         Rotation2d angularPosition = new Rotation2d();
         double position = 0;
+        Rotation2d encoderAngle = new Rotation2d();
+        Rotation2d encoderAngleNoOffset = new Rotation2d();
 
         double driveTemperature = 0;
         double angleTemperature = 0;
@@ -27,5 +29,7 @@ public interface SwerveModuleIO {
 
     public void setDesiredAngularPositionAndVelocity(double angularPosition, double angularVelocity);
 
-    public void disableMotors();
+    public void disableDriveMotor();
+
+    public void disableAngleMotor();
 }
