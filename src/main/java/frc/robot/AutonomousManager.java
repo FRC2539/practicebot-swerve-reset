@@ -41,7 +41,7 @@ public class AutonomousManager {
 
         // Create an event map for use in all autos
         HashMap<String, Command> eventMap = new HashMap<>();
-        eventMap.put("levelChargeStation", swerveDriveSubsystem.levelChargeStationCommandDestiny());
+        eventMap.put("levelChargeStation", swerveDriveSubsystem.levelChargeStationCommand());
         eventMap.put("lock", run(swerveDriveSubsystem::lock, swerveDriveSubsystem));
 
         autoBuilder = new SwerveAutoBuilder(

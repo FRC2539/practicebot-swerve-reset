@@ -5,7 +5,6 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -29,7 +28,6 @@ import frc.lib.swerve.SwerveDriveSignal;
 import frc.robot.Constants;
 import frc.robot.Constants.SwerveConstants;
 import frc.robot.subsystems.swervedrive.GyroIO.GyroIOInputs;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 public class SwerveDriveSubsystem extends SubsystemBase {
@@ -115,18 +113,6 @@ public class SwerveDriveSubsystem extends SubsystemBase {
         });
     }
 
-    // public Command cardinalCommand(Rotation2d targetAngle, DoubleSupplier forward, DoubleSupplier strafe) {
-    //     omegaController.setTolerance(Units.degreesToRadians(1));
-    //     omegaController.enableContinuousInput(-Math.PI, Math.PI);
-
-    //     return run(() -> {
-    //         var rotationVelocity = omegaController.calculate(pose.getRotation().getRadians(),
-    // targetAngle.getRadians());
-
-    //         setVelocity(new ChassisSpeeds(forward.getAsDouble(), strafe.getAsDouble(), rotationVelocity), true);
-    //     });
-    // }
-
     public Command cardinalCommand(Rotation2d targetAngle, DoubleSupplier forward, DoubleSupplier strafe) {
         omegaController.enableContinuousInput(-Math.PI, Math.PI);
 
@@ -156,7 +142,7 @@ public class SwerveDriveSubsystem extends SubsystemBase {
         }
     }
 
-    public Command levelChargeStationCommandDestiny() {
+    public Command levelChargeStationCommand() {
         Timer myFavoriteTimer = new Timer();
         AnyContainer<Double> sketchyBoi = new AnyContainer<Double>(0.5);
         AnyContainer<Boolean> isGoingSlower = new AnyContainer<Boolean>(false);
@@ -217,50 +203,8 @@ public class SwerveDriveSubsystem extends SubsystemBase {
                 });
     }
 
-    public boolean isLevelDestiny() {
+    public boolean isAutoLeveled() {
         return tiltController.atSetpoint() && isLevelingAuto;
-    }
-
-    public Command levelChargeStationCommandBrooklyn() {
-        // 0.05 is the response time. this prevents the wheels from going all crazy
-        Debouncer isLevelEnough = new Debouncer(0.05, Debouncer.DebounceType.kBoth);
-
-        return run(() -> {
-            double tilt = getTiltAmount();
-
-            Translation2d finalDirection = new Translation2d(
-                            getNormalVector3d().getX(), getNormalVector3d().getY())
-                    .times(0.5); // 0.05 is the max speed
-
-            if (isLevelEnough.calculate(tilt < Math.toRadians(6))) {
-                lock();
-            } else {
-                setVelocity(new ChassisSpeeds(finalDirection.getX(), finalDirection.getY(), 0), false);
-            }
-        });
-    }
-
-    public Command levelChargeStationCommandCatherine() {
-        // 0.05 is the response time. this prevents the wheels from going all crazy
-        Debouncer isFastEnough = new Debouncer(0.05, Debouncer.DebounceType.kBoth);
-
-        BooleanSupplier whenToStop = () -> {
-            return isFastEnough.calculate(getTiltRate() < -15);
-        };
-
-        return runEnd(
-                        () -> {
-                            Translation2d finalDirection = new Translation2d(
-                                            getNormalVector3d().getX(),
-                                            getNormalVector3d().getY())
-                                    .times(0.5); // 0.05 is the max speed
-
-                            setVelocity(new ChassisSpeeds(finalDirection.getX(), finalDirection.getY(), 0), false);
-                        },
-                        () -> {
-                            lock();
-                        })
-                .until(whenToStop);
     }
 
     public void setCustomMaxSpeedSupplier(DoubleSupplier maxSpeedSupplier) {
