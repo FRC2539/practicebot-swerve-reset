@@ -16,6 +16,7 @@ import frc.robot.subsystems.lights.LightsSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveDriveSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveModuleIO;
 import frc.robot.subsystems.swervedrive.SwerveModuleIOPhoenixPro;
+import frc.robot.subsystems.vision.AprilTagIOSim;
 import frc.robot.subsystems.vision.VisionSubsystem;
 
 public class RobotContainer {
@@ -36,7 +37,7 @@ public class RobotContainer {
         new SwerveModuleIOPhoenixPro(3, Constants.SwerveConstants.Mod3.constants)
     });
     private final LightsSubsystem lightsSubsystem = new LightsSubsystem(new LightsIOBlinkin(0));
-    private final VisionSubsystem visionSubsystem = new VisionSubsystem();
+    private final VisionSubsystem visionSubsystem = new VisionSubsystem(swerveDriveSubsystem, new AprilTagIOSim(), new AprilTagIOSim());
 
     public AutonomousManager autonomousManager;
 

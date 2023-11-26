@@ -11,5 +11,7 @@ public interface AprilTagIO extends CameraIO<AprilTagIO.AprilTagIOInputs> {
     public static class AprilTagIOInputs {
         Pose3d poseEstimate3d;
         Pose2d poseEstimate;
+        double targetDistance;
+        double timestamp;
     }
 }
