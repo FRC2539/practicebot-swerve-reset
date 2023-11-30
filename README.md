@@ -27,4 +27,14 @@ Continuing our example, what do each of the files do? `ShooterSubsystem.java` wo
 
 The interface is composed of methods that do the output (setters), and one method that updates a class of inputs. Take the `FlywheelIO` interface defined in the `FlywheelIO.java` file. This would likely have a `setDesiredVelocity()` method that sets the velocity the flywheel is aiming for. It would also have a `updateInputs()` method that takes as an argument an instance of `FlywheelIOInputs`. This class has only public fields and is defined as an inner class of the `FlywheelIO` interface. Only through this `FlywheelIOInputs` class does any information leave and implementation of `FlywheelIO`.
 
-An implementation of the `FlywheelIO` interface where the flywheel is powered by a Falcon500 would be the `FlywheelIOFalcon500` class. Every implementation of an IO interface should be named by appending a distinguishing name to the end of the interface name. An example of the benefit of separating these different IO implementations out into different classes is the ability to create a `FlywheelIOSim` class which is passed into the `ShooterSubsystem` constructor if the robot code is in simulation. This allows for us to write important code without knowing exactly which motor we are going to be using, allows us to change mechanisms more freely, and allows more thorough and accurate simulation code.
+An implementation of the `FlywheelIO` interface where the flywheel is powered by a Falcon500 would be the `FlywheelIOFalcon500` class. Every implementation of an IO interface should be named by appending a distinguishing name to the end of the interface name. An example of the benefit of separating these different IO implementations out into different classes is the ability to create a `FlywheelIOSim` class which is passed into the `ShooterSubsystem` constructor if the robot code is in simulation. This allows for us to write important code without knowing exactly which motor or sensor we are going to be using, allows us to change mechanisms more freely, and allows more thorough and accurate simulation code.
+
+### Commands
+
+Commands are going to be basically normal. Nothing is changing from the way we used them last year.
+
+They will be predominantly defined using the methods introduced for creating nameless commands and returning them from methods. Some more complicated commands will have files, but ideally most commands and functions on the robot should be very simple commands that are defined in the subsystem class.
+
+### Logging
+
+We will continue to use the current logging solution. It is effective enough for us to not need to improve on it right now. One benefit of some of this robot code organization is that it should be significantly easier to switch to AdvantageKit over the summer.
