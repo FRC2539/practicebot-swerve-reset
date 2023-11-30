@@ -6,19 +6,19 @@ public interface SwerveModuleIO {
     public void updateInputs(SwerveModuleIOInputs inputs);
 
     public class SwerveModuleIOInputs {
-        double angularVelocity = 0;
-        double velocity = 0;
-        Rotation2d angularPosition = new Rotation2d();
-        double position = 0;
-        Rotation2d encoderAngle = new Rotation2d();
-        Rotation2d encoderAngleNoOffset = new Rotation2d();
+        public double angularVelocity = 0;
+        public double velocity = 0;
+        public Rotation2d angularPosition = new Rotation2d();
+        public double position = 0;
+        public Rotation2d encoderAngle = new Rotation2d();
+        public Rotation2d encoderAngleNoOffset = new Rotation2d();
 
-        double driveTemperature = 0;
-        double angleTemperature = 0;
-        double driveVoltage = 0;
-        double angleVoltage = 0;
-        double driveCurrent = 0;
-        double angleCurrent = 0;
+        public double driveTemperature = 0;
+        public double angleTemperature = 0;
+        public double driveVoltage = 0;
+        public double angleVoltage = 0;
+        public double driveCurrent = 0;
+        public double angleCurrent = 0;
     }
 
     public void setDesiredVelocityOpenLoop(double velocity);
