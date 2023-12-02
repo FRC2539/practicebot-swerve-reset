@@ -1,6 +1,9 @@
 # Welcome to the Practice Bot Swerve Refactor!
 This is where we are experimenting around with a slightly different robot code structure for next year.
 
+***Small Disclaimer:***
+This code is currenty untested due to inaccessibility to the practice bot. <ins>Despite this, the general structure is still final.</ins>
+
 ## General Structure
 
 The general structure of stuff should look like the layout of files in this current program. Any exceptions will be noted.
