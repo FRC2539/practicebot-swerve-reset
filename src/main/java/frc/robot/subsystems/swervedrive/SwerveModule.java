@@ -15,7 +15,7 @@ public class SwerveModule {
 
     private SwerveModuleIO swerveModuleIO;
 
-    private SwerveModuleIOInputs inputs;
+    private SwerveModuleIOInputs inputs = new SwerveModuleIOInputs();
 
     public SwerveModule(SwerveModuleIO swerveModuleIO) {
         this.swerveModuleIO = swerveModuleIO;
@@ -79,12 +79,8 @@ public class SwerveModule {
         swerveModuleIO.disableDriveMotor();
     }
 
-    public Rotation2d getCanCoderWithOffset() {
+    public Rotation2d getCanCoderAngle() {
         return inputs.encoderAngle;
-    }
-
-    public Rotation2d getCanCoderNoOffset() {
-        return inputs.encoderAngleNoOffset;
     }
 
     public SwerveModuleState getState() {

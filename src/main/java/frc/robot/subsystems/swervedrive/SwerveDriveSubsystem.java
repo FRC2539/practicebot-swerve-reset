@@ -67,8 +67,8 @@ public class SwerveDriveSubsystem extends SubsystemBase {
     private double tiltRate = 0;
     private DoubleSupplier maxSpeedSupplier = () -> Constants.SwerveConstants.maxSpeed;
 
-    public SwerveDriveSubsystem(SwerveModuleIO[] swerveModuleIOs) {
-        gyroIO = new GyroIONavX();
+    public SwerveDriveSubsystem(GyroIO gyroIO, SwerveModuleIO[] swerveModuleIOs) {
+        this.gyroIO = gyroIO;
 
         modules = new SwerveModule[] {
             new SwerveModule(swerveModuleIOs[0]),
@@ -426,10 +426,10 @@ public class SwerveDriveSubsystem extends SubsystemBase {
         });
 
         Logger.log("/SwerveDriveSubsystem/CANCoder Angles", new double[] {
-            modules[0].getCanCoderNoOffset().getDegrees(),
-            modules[1].getCanCoderNoOffset().getDegrees(),
-            modules[2].getCanCoderNoOffset().getDegrees(),
-            modules[3].getCanCoderNoOffset().getDegrees()
+            modules[0].getCanCoderAngle().getDegrees(),
+            modules[1].getCanCoderAngle().getDegrees(),
+            modules[2].getCanCoderAngle().getDegrees(),
+            modules[3].getCanCoderAngle().getDegrees()
         });
 
         Logger.log("/SwerveDriveSubsystem/Drive Temperatures", getDriveTemperatures());

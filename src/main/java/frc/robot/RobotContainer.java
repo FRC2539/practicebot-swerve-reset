@@ -12,10 +12,14 @@ import frc.lib.controller.LogitechController;
 import frc.lib.controller.ThrustmasterJoystick;
 import frc.robot.Constants.ControllerConstants;
 import frc.robot.subsystems.lights.LightsIOBlinkin;
+import frc.robot.subsystems.lights.LightsIOSim;
 import frc.robot.subsystems.lights.LightsSubsystem;
+import frc.robot.subsystems.swervedrive.GyroIONavX;
+import frc.robot.subsystems.swervedrive.GyroIOSim;
 import frc.robot.subsystems.swervedrive.SwerveDriveSubsystem;
 import frc.robot.subsystems.swervedrive.SwerveModuleIO;
 import frc.robot.subsystems.swervedrive.SwerveModuleIOPhoenixPro;
+import frc.robot.subsystems.swervedrive.SwerveModuleIOSim;
 import frc.robot.subsystems.vision.AprilTagIOSim;
 import frc.robot.subsystems.vision.VisionSubsystem;
 
@@ -30,18 +34,33 @@ public class RobotContainer {
     public static SlewRateLimiter forwardRateLimiter = new SlewRateLimiter(35, -35, 0);
     public static SlewRateLimiter strafeRateLimiter = new SlewRateLimiter(35, -35, 0);
 
-    private final SwerveDriveSubsystem swerveDriveSubsystem = new SwerveDriveSubsystem(new SwerveModuleIO[] {
-        new SwerveModuleIOPhoenixPro(0, Constants.SwerveConstants.Mod0.constants),
-        new SwerveModuleIOPhoenixPro(1, Constants.SwerveConstants.Mod1.constants),
-        new SwerveModuleIOPhoenixPro(2, Constants.SwerveConstants.Mod2.constants),
-        new SwerveModuleIOPhoenixPro(3, Constants.SwerveConstants.Mod3.constants)
-    });
-    private final LightsSubsystem lightsSubsystem = new LightsSubsystem(new LightsIOBlinkin(0));
-    private final VisionSubsystem visionSubsystem = new VisionSubsystem(swerveDriveSubsystem, new AprilTagIOSim(), new AprilTagIOSim());
+    private SwerveDriveSubsystem swerveDriveSubsystem;
+    private LightsSubsystem lightsSubsystem;
+    private VisionSubsystem visionSubsystem;
 
     public AutonomousManager autonomousManager;
 
     public RobotContainer(TimedRobot robot) {
+        if (Robot.isReal()) {
+            swerveDriveSubsystem = new SwerveDriveSubsystem(new GyroIONavX(), new SwerveModuleIO[] {
+                new SwerveModuleIOPhoenixPro(0, Constants.SwerveConstants.Mod0.constants),
+                new SwerveModuleIOPhoenixPro(1, Constants.SwerveConstants.Mod1.constants),
+                new SwerveModuleIOPhoenixPro(2, Constants.SwerveConstants.Mod2.constants),
+                new SwerveModuleIOPhoenixPro(3, Constants.SwerveConstants.Mod3.constants)
+            });
+            lightsSubsystem = new LightsSubsystem(new LightsIOBlinkin(0));
+            visionSubsystem = new VisionSubsystem(swerveDriveSubsystem, new AprilTagIOSim(), new AprilTagIOSim());
+        } else {
+            swerveDriveSubsystem = new SwerveDriveSubsystem(new GyroIOSim(), new SwerveModuleIO[] {
+                new SwerveModuleIOSim(),
+                new SwerveModuleIOSim(),
+                new SwerveModuleIOSim(),
+                new SwerveModuleIOSim()
+            });
+            lightsSubsystem = new LightsSubsystem(new LightsIOSim());
+            visionSubsystem = new VisionSubsystem(swerveDriveSubsystem, new AprilTagIOSim(), new AprilTagIOSim());
+        }
+
         autonomousManager = new AutonomousManager(this);
 
         configureBindings();

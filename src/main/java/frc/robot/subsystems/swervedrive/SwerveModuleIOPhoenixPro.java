@@ -22,7 +22,6 @@ import frc.robot.Robot;
 
 public class SwerveModuleIOPhoenixPro implements SwerveModuleIO {
     public int moduleNumber;
-    private double zeroedWheelCANCoderAngle;
     private TalonFX angleMotor;
     private TalonFX driveMotor;
     private CANcoder angleEncoder;
@@ -60,7 +59,7 @@ public class SwerveModuleIOPhoenixPro implements SwerveModuleIO {
 
     public SwerveModuleIOPhoenixPro(int moduleNumber, SwerveModuleConstants moduleConstants) {
         this.moduleNumber = moduleNumber;
-        zeroedWheelCANCoderAngle = moduleConstants.angleOffset / 360;
+
 
         /* Angle Encoder Config */
         angleEncoder = moduleConstants.canivoreName.isEmpty()
@@ -143,8 +142,6 @@ public class SwerveModuleIOPhoenixPro implements SwerveModuleIO {
                 Constants.SwerveConstants.driveGearRatio);
         inputs.encoderAngle =
                 Rotation2d.fromRotations(encoderAbsoluteAngleSS.refresh().getValue());
-        inputs.encoderAngleNoOffset = Rotation2d.fromRotations(
-                (encoderAbsoluteAngleSS.refresh().getValue() + zeroedWheelCANCoderAngle) % 1.0);
 
         inputs.driveTemperature = driveTemperatureSS.refresh().getValue();
         inputs.angleTemperature = angleTemperatureSS.refresh().getValue();
@@ -158,7 +155,6 @@ public class SwerveModuleIOPhoenixPro implements SwerveModuleIO {
         angleEncoder.getConfigurator().apply(Robot.ctreConfigs.swerveCanCoderConfig);
         MagnetSensorConfigs myMagnetSensorConfigs = new MagnetSensorConfigs();
         angleEncoder.getConfigurator().refresh(myMagnetSensorConfigs);
-        myMagnetSensorConfigs.MagnetOffset = -zeroedWheelCANCoderAngle;
         angleEncoder.getConfigurator().apply(myMagnetSensorConfigs);
     }
 

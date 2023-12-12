@@ -26,6 +26,9 @@ public class VisionSubsystem extends SubsystemBase {
     public VisionSubsystem(SwerveDriveSubsystem consumer, AprilTagIO... cameras) {
         this.cameras = cameras;
         inputs = (Optional<AprilTagIOInputs>[]) new Optional[cameras.length];
+        for (int i = 0; i < inputs.length; i++) {
+            inputs[i] = Optional.empty();
+        }
         this.consumer = consumer;
     }
 
