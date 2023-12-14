@@ -17,8 +17,9 @@ public class SwerveModule {
 
     private SwerveModuleIOInputs inputs = new SwerveModuleIOInputs();
 
-    public SwerveModule(SwerveModuleIO swerveModuleIO) {
+    public SwerveModule(SwerveModuleIO swerveModuleIO, int moduleNumber) {
         this.swerveModuleIO = swerveModuleIO;
+        this.moduleNumber = moduleNumber;
 
         swerveModuleIO.updateInputs(inputs);
 

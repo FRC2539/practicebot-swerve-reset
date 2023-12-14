@@ -71,10 +71,10 @@ public class SwerveDriveSubsystem extends SubsystemBase {
         this.gyroIO = gyroIO;
 
         modules = new SwerveModule[] {
-            new SwerveModule(swerveModuleIOs[0]),
-            new SwerveModule(swerveModuleIOs[1]),
-            new SwerveModule(swerveModuleIOs[2]),
-            new SwerveModule(swerveModuleIOs[3])
+            new SwerveModule(swerveModuleIOs[0], 0),
+            new SwerveModule(swerveModuleIOs[1], 1),
+            new SwerveModule(swerveModuleIOs[2], 2),
+            new SwerveModule(swerveModuleIOs[3], 3)
         };
 
         // Initialize the swerve drive pose estimator with access to the module positions.
