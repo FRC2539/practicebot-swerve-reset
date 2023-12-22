@@ -87,7 +87,7 @@ public class SwerveDriveSubsystem extends SubsystemBase {
                 VecBuilder.fill(0.9, 0.9, 0.9)); // might need to bring these back up (was 0.5)
 
         // Allow us to toggle on second order kinematics
-        isSecondOrder = Logger.tunable("/SwerveDriveSubsystem/isSecondOrder", true);
+        isSecondOrder = Logger.tunable("/SwerveDriveSubsystem/isSecondOrder", false);
     }
 
     public Command driveCommand(
@@ -322,12 +322,47 @@ public class SwerveDriveSubsystem extends SubsystemBase {
         driveSignal = new SwerveDriveSignal(true);
     }
 
-    public void update() {
+    private void setModuleStates(SwerveModuleState[] desiredStates, boolean isOpenLoop) {
+        SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, maxSpeedSupplier.getAsDouble());
+
+        for (SwerveModule module : modules) {
+            module.setDesiredState(desiredStates[module.moduleNumber], isOpenLoop, isSecondOrder.getBoolean());
+        }
+
+        Logger.log("/SwerveDriveSubsystem/Wheel Setpoint", desiredStates[0].speedMetersPerSecond);
+    }
+
+    private boolean isDriveSignalStopped(SwerveDriveSignal driveSignal) {
+        return driveSignal.vxMetersPerSecond == 0
+                && driveSignal.vyMetersPerSecond == 0
+                && driveSignal.omegaRadiansPerSecond == 0;
+    }
+
+    @Override
+    public void periodic() {
+        gyroIO.updateInputs(gyroInputs);
+
+        for (SwerveModule module : modules) {
+            module.updateInputs();
+        }
+
+        var startTimeMS = Timer.getFPGATimestamp() * 1000;
+
+        Logger.log("/SwerveDriveSubsystem/LoopDuration", Timer.getFPGATimestamp() * 1000 - startTimeMS);
+
+        var tilt = getTiltAmount();
+        tiltRate = (tilt - previousTilt) / 0.02;
+        previousTilt = tilt;
+
+        // Comment out to play music
         updateOdometry();
 
         if (isCharacterizing) return;
 
         updateModules(driveSignal);
+        //* endd comment out here */
+
+        updateLogs();
     }
 
     private void updateOdometry() {
@@ -339,7 +374,7 @@ public class SwerveDriveSubsystem extends SubsystemBase {
 
         // velocityEstimator.add(velocity);
 
-        pose = swervePoseEstimator.update(getGyroRotation(), modulePositions);
+        // pose = swervePoseEstimator.update(getGyroRotation(), modulePositions);
     }
 
     private void updateModules(SwerveDriveSignal driveSignal) {
@@ -377,34 +412,7 @@ public class SwerveDriveSubsystem extends SubsystemBase {
         }
     }
 
-    private void setModuleStates(SwerveModuleState[] desiredStates, boolean isOpenLoop) {
-        SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, maxSpeedSupplier.getAsDouble());
-
-        for (SwerveModule module : modules) {
-            module.setDesiredState(desiredStates[module.moduleNumber], isOpenLoop, isSecondOrder.getBoolean());
-        }
-
-        Logger.log("/SwerveDriveSubsystem/Wheel Setpoint", desiredStates[0].speedMetersPerSecond);
-    }
-
-    private boolean isDriveSignalStopped(SwerveDriveSignal driveSignal) {
-        return driveSignal.vxMetersPerSecond == 0
-                && driveSignal.vyMetersPerSecond == 0
-                && driveSignal.omegaRadiansPerSecond == 0;
-    }
-
-    @Override
-    public void periodic() {
-        gyroIO.updateInputs(gyroInputs);
-
-        var startTimeMS = Timer.getFPGATimestamp() * 1000;
-
-        var tilt = getTiltAmount();
-        tiltRate = (tilt - previousTilt) / 0.02;
-        previousTilt = tilt;
-
-        // Comment out to play music
-        update();
+    public void updateLogs() {
 
         Logger.log("/SwerveDriveSubsystem/Pose", pose);
         // Logger.log("/SwerveDriveSubsystem/Velocity", velocity);
@@ -418,24 +426,52 @@ public class SwerveDriveSubsystem extends SubsystemBase {
         Logger.log("/SwerveDriveSubsystem/Roll", getGyroRotation3d().getX());
         Logger.log("/SwerveDriveSubsystem/Tilt", getTiltAmountInDegrees());
 
-        Logger.log("/SwerveDriveSubsystem/Wheel Angles", new double[] {
-            modules[0].getPosition().angle.getDegrees(),
-            modules[1].getPosition().angle.getDegrees(),
-            modules[2].getPosition().angle.getDegrees(),
-            modules[3].getPosition().angle.getDegrees()
-        });
-
         Logger.log("/SwerveDriveSubsystem/CANCoder Angles", new double[] {
             modules[0].getCanCoderAngle().getDegrees(),
             modules[1].getCanCoderAngle().getDegrees(),
             modules[2].getCanCoderAngle().getDegrees(),
-            modules[3].getCanCoderAngle().getDegrees()
+            modules[3].getCanCoderAngle().getDegrees(),
         });
 
-        Logger.log("/SwerveDriveSubsystem/Drive Temperatures", getDriveTemperatures());
-        // Logger.log("/SwerveDriveSubsystem/Angle Temperatures", getAngleTemperatures());
+        Logger.log("/SwerveDriveSubsystem/SwerveModuleStates/Measured", new double[] {
+            modules[0].getState().angle.getRadians(), modules[0].getState().speedMetersPerSecond,
+            modules[1].getState().angle.getRadians(), modules[1].getState().speedMetersPerSecond,
+            modules[2].getState().angle.getRadians(), modules[2].getState().speedMetersPerSecond,
+            modules[3].getState().angle.getRadians(), modules[3].getState().speedMetersPerSecond
+        });
 
-        Logger.log("/SwerveDriveSubsystem/LoopDuration", Timer.getFPGATimestamp() * 1000 - startTimeMS);
+        Logger.log("/SwerveDriveSubsystem/SwerveModuleStates/Setpoints", new double[] {
+            modules[0].getDesiredState().angle.getRadians(), modules[0].getDesiredState().speedMetersPerSecond,
+            modules[1].getDesiredState().angle.getRadians(), modules[1].getDesiredState().speedMetersPerSecond,
+            modules[2].getDesiredState().angle.getRadians(), modules[2].getDesiredState().speedMetersPerSecond,
+            modules[3].getDesiredState().angle.getRadians(), modules[3].getDesiredState().speedMetersPerSecond,
+        });
+
+        // Logger.log("/SwerveDriveSubsystem/Wheel Angles", new double[] {
+        //     modules[0].getPosition().angle.getDegrees(),
+        //     modules[1].getPosition().angle.getDegrees(),
+        //     modules[2].getPosition().angle.getDegrees(),
+        //     modules[3].getPosition().angle.getDegrees()
+        // });
+
+        // Logger.log("/SwerveDriveSubsystem/Angle Wheel Amps", new double[] {
+        //     modules[0].getAngleCurrent(),
+        //     modules[1].getAngleCurrent(),
+        //     modules[2].getAngleCurrent(),
+        //     modules[3].getAngleCurrent()
+        // });
+
+        // Logger.log("/SwerveDriveSubsystem/Angle Wheel Volts", new double[] {
+        //     modules[0].getAngleVoltage(),
+        //     modules[1].getAngleVoltage(),
+        //     modules[2].getAngleVoltage(),
+        //     modules[3].getAngleVoltage()
+        // });
+
+        Logger.log("/SwerveDriveSubsystem/Drive Temperatures", getDriveTemperatures());
+        Logger.log("/SwerveDriveSubsystem/Angle Temperatures", getAngleTemperatures());
+
+        
     }
 
     public SwerveModuleState[] getModuleStates() {

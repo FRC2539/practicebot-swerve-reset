@@ -17,6 +17,8 @@ public class SwerveModule {
 
     private SwerveModuleIOInputs inputs = new SwerveModuleIOInputs();
 
+    private SwerveModuleState desiredSetpointState = new SwerveModuleState();
+
     public SwerveModule(SwerveModuleIO swerveModuleIO, int moduleNumber) {
         this.swerveModuleIO = swerveModuleIO;
         this.moduleNumber = moduleNumber;
@@ -31,6 +33,8 @@ public class SwerveModule {
     }
 
     public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop, boolean isSecondOrder) {
+        desiredSetpointState = desiredState;
+
         // Custom optimize command, since default WPILib optimize assumes continuous controller, which CTRE is not
         desiredState = CTREModuleState.optimize(desiredState, getState().angle);
 
@@ -98,6 +102,10 @@ public class SwerveModule {
         double encoder = inputs.position;
         Rotation2d angle = inputs.angularPosition;
         return new SwerveModulePosition(encoder, angle);
+    }
+
+    public SwerveModuleState getDesiredState() {
+        return desiredSetpointState;
     }
 
     public double getDriveTemperature() {
