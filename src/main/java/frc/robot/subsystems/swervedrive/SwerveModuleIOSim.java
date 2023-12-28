@@ -38,12 +38,12 @@ public class SwerveModuleIOSim implements SwerveModuleIO {
     };
 
     public void setDesiredAngularPosition(double angularPosition) {
-        this.angularPosition = angularPosition;
+        this.angularPosition = Math.toRadians(angularPosition);
         angularVelocity = 0;
     };
 
     public void setDesiredAngularPositionAndVelocity(double angularPosition, double angularVelocity) {
-        this.angularPosition = angularPosition;
+        this.angularPosition = Math.toRadians(angularPosition);
         this.angularVelocity = angularVelocity;
     };
 

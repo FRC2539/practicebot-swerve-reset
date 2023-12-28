@@ -374,7 +374,14 @@ public class SwerveDriveSubsystem extends SubsystemBase {
 
         // velocityEstimator.add(velocity);
 
-        // pose = swervePoseEstimator.update(getGyroRotation(), modulePositions);
+
+
+        if (gyroInputs.isActive) {
+            pose = swervePoseEstimator.update(getGyroRotation(), modulePositions);
+        } else { //TODO: this is a very hacky hack that should be fixed 
+            pose = swervePoseEstimator.update(pose.getRotation().plus(Rotation2d.fromRadians(velocity.omegaRadiansPerSecond * 0.05)), modulePositions);
+        }
+        
     }
 
     private void updateModules(SwerveDriveSignal driveSignal) {

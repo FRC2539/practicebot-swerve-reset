@@ -14,5 +14,6 @@ public class GyroIONavX implements GyroIO {
         inputs.rotation3d =
                 new Rotation3d(Units.degreesToRadians(navX.getRoll()), Units.degreesToRadians(navX.getPitch()), 0);
         inputs.rotationRates3d = new Rotation3d(navX.getRawGyroX(), navX.getRawGyroY(), navX.getRawGyroZ());
+        inputs.isActive = true;
     }
 }

@@ -13,5 +13,7 @@ public interface GyroIO {
         public Rotation3d rotation3d = new Rotation3d();
 
         public Rotation3d rotationRates3d = new Rotation3d();
+
+        public boolean isActive = false;
     }
 }

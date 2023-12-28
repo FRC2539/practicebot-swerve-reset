@@ -27,5 +27,7 @@ public class GyroIOPigeon implements GyroIO {
 
         pigeon.getRawGyro(rawXYZ);
         inputs.rotationRates3d = new Rotation3d(rawXYZ[0], rawXYZ[1], rawXYZ[2]);
+
+        inputs.isActive = true;
     }
 }
