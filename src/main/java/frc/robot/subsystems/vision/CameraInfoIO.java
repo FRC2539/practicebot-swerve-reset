@@ -6,9 +6,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 
 public interface CameraInfoIO {
-    public Optional<AprilTagIOInputs> updateInputs();
+    public Optional<CameraInfoIOInputs> updateInputs();
     
-    public static class AprilTagIOInputs {
+    public static class CameraInfoIOInputs {
         Pose3d poseEstimate3d;
         Pose2d poseEstimate;
         double targetDistance;
@@ -16,5 +16,7 @@ public interface CameraInfoIO {
         
         double tx; //tx is positive right
         double ty; //ty is positive up
+
+        int targetID;
     }
 }
